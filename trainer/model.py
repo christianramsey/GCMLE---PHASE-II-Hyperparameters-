@@ -201,20 +201,23 @@ def my_rmse(predictions, labels, **args):
                        labels, **args)
 
 
-def make_experiment_fn(traindata, evaldata, **args):
+def make_experiment_fn(traindata, evaldata, num_training_epochs, batch_size, nbuckets, hidden_units, **args):
 
   def _experiment_fn(output_dir):
 
     return tflearn.Experiment(
         wide_and_deep(output_dir, 5),
         train_input_fn=read_dataset(traindata,
-        mode=tf.contrib.learn.ModeKeys.TRAIN),
-        eval_input_fn=read_dataset(evaldata),
-        eval_metrics={
-            'rmse': tflearn.MetricSpec(metric_fn=my_rmse,
-                                       prediction_key='probabilities'),
-            'training/hptuning/metric' : tflearn.MetricSpec(metric_fn=my_rmse, prediction_key='probabilities')
-        },
+                                    mode=tf.contrib.learn.ModeKeys.TRAIN),
+                                    eval_input_fn=read_dataset(evaldata),
+                                    batch_size=batch_size,
+                                    num_training_epochs=num_training_epochs,
+                                    eval_metrics={
+                                        'rmse': tflearn.MetricSpec(metric_fn=my_rmse,
+                                                                   prediction_key='probabilities'),
+                                        'training/hptuning/metric' : tflearn.MetricSpec(metric_fn=my_rmse,
+                                                                                        prediction_key='probabilities')
+                                    },
         export_strategies=[saved_model_export_utils.make_export_strategy(
             serving_input_fn,
             default_output_alternative_key=None,
