@@ -40,6 +40,12 @@ if __name__ == '__main__':
         default=512
     )
     parser.add_argument(
+        '--learning_rate',
+        help='let see',
+        type=float,
+        default=0.5
+    )
+    parser.add_argument(
         '--num_training_epochs',
         help='Number of training epochs',
         type=int,
@@ -67,6 +73,7 @@ if __name__ == '__main__':
     arguments.pop('job_dir', None)
     output_dir = arguments.pop('output_dir')
 
+    print("*******ARGUMENTS: ", arguments)
     # job_dir = arguments['job-dir']
     output_dir = os.path.join(
         output_dir,

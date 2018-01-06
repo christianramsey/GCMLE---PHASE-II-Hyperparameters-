@@ -21,7 +21,10 @@ DEFAULTS     = [[0.0],[0.0],[0.0],[0.0],[0.0],[0.0], ['na'],[0.0],[0.0],[0.0],[0
 # a function to read the training and eval dataset, which will give us batch_size examples each time,
 # which goes through the dataset num_training_epochs times. the modekeys allows us to make conditional since
 # we only w`ant to run through the code once in evaluation
-def read_dataset(filename, mode=tf.contrib.learn.ModeKeys.EVAL, batch_size=512, num_training_epochs=10):
+def read_dataset(filename, mode=tf.contrib.learn.ModeKeys.EVAL, batch_size=512, num_training_epochs=10, **args):
+    print(".....................BATCH.SIZE", batch_size)
+    print(".....................NUM.TRAINING.EPOCHS", num_training_epochs)
+
     # the actual input function passed to TensorFlow
     def _input_fn():
         num_epochs = num_training_epochs if mode == tf.contrib.learn.ModeKeys.TRAIN else 1
@@ -73,41 +76,21 @@ def create_embed(sparse_col):
         dim = 1 + int(round(np.log2(nbins) ) )
     return tflayers.embedding_column(sparse_col, dimension=dim)
 
-def linear_model(output_dir):
-    real, sparse = get_features()
-    all = {}
-    all.update(real)
-    all.update(sparse)
-    estimator = tflearn.LinearClassifier(model_dir=output_dir, feature_columns=all.values())
-    estimator.params["head"]._thresholds = [0.7]
-    return estimator
 
-def dnn_model(output_dir):
-    real, sparse = get_features()
-    all = {}
-    all.update(real)
-    embed = {
-       colname : create_embed(col) \
-          for colname, col in sparse.items()
-    }
-    all.update(embed)
-
-    estimator = tflearn.DNNClassifier(model_dir=output_dir,
-                                      feature_columns=all.values(),
-                                      hidden_units=[64, 16, 4])
-    estimator.params["head"]._thresholds = [0.7]
-    return estimator
-
-def wide_and_deep(output_dir, buckets, hiddenunits):
+def wide_and_deep(output_dir, buckets, hiddenunits, learningrate):
     real, sparse = get_features()
 
-    nbuckets = 4 # defaults
+    nbuckets = 5 # defaults
     if buckets != None:
         nbuckets = buckets
 
     hidden_units = [64, 12, 4]
     if hiddenunits != None:
         hidden_units = hiddenunits
+
+    learning_rate = 0.5
+    if learningrate != None:
+        learning_rate = learningrate
 
 
     # bucketise/discretise lat and lon to nbuckets
@@ -145,12 +128,18 @@ def wide_and_deep(output_dir, buckets, hiddenunits):
 
     estimator = tflearn.DNNLinearCombinedClassifier(model_dir=output_dir,
                                                     linear_feature_columns= sparse.values(),
-                                                    dnn_feature_columns=real.values(), dnn_hidden_units = hidden_units)
+                                                    dnn_feature_columns=real.values(), dnn_hidden_units = hidden_units, learning_rate=learning_rate)
 
     estimator.params["head"]._thresholds = [0.7]
 
 
     return estimator
+
+def get_model(output_dir, nbuckets, hidden_units, learning_rate):
+    #return linear_model(output_dir)
+    #return dnn_model(output_dir)
+    return wide_and_deep(output_dir, nbuckets, hidden_units, learning_rate)
+
 
 def serving_input_fn():
     real, sparse = get_features()
@@ -206,23 +195,17 @@ def my_rmse(predictions, labels, **args):
                        labels, **args)
 
 
-def make_experiment_fn(traindata, evaldata, num_training_epochs, nbuckets, batch_size, hidden_units, **args):
+def make_experiment_fn(traindata, evaldata, num_training_epochs, batch_size, nbuckets, hidden_units, learning_rate, **args):
 
   def _experiment_fn(output_dir):
-
     return tflearn.Experiment(
-        wide_and_deep(output_dir, nbuckets, hidden_units),
-        train_input_fn=read_dataset(traindata,
-                                    mode=tf.contrib.learn.ModeKeys.TRAIN),
-                                    eval_input_fn=read_dataset(evaldata),
-                                    batch_size=batch_size,
-                                    num_training_epochs=num_training_epochs,
-                                    eval_metrics={
-                                        'rmse': tflearn.MetricSpec(metric_fn=my_rmse,
-                                                                   prediction_key='probabilities'),
-                                        'training/hptuning/metric' : tflearn.MetricSpec(metric_fn=my_rmse,
-                                                                                        prediction_key='probabilities')
-                                    },
+        get_model(output_dir, nbuckets, hidden_units, learning_rate),
+            train_input_fn=read_dataset(traindata, mode=tf.contrib.learn.ModeKeys.TRAIN, num_training_epochs=num_training_epochs, batch_size=batch_size),
+            eval_input_fn=read_dataset(evaldata), num_training_epochs=num_training_epochs,
+                eval_metrics={
+                    'rmse': tflearn.MetricSpec(metric_fn=my_rmse,  prediction_key='probabilities'),
+                    'training/hptuning/metric' : tflearn.MetricSpec(metric_fn=my_rmse, prediction_key='probabilities')
+                            },
         export_strategies=[saved_model_export_utils.make_export_strategy(
             serving_input_fn,
             default_output_alternative_key=None,

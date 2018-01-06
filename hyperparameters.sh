@@ -6,7 +6,7 @@ gcloud ml-engine jobs submit training $JOBNAME \
   --package-path=$(pwd)/\
   --job-dir=$OUTPUT_DIR \
   --staging-bucket=gs://$BUCKET \
-  --config=hyperparam.yaml \
+  --config=../hyperparameters.yaml \
  --\
    --output_dir=$OUTPUT_DIR \
    --traindata $DATA_DIR/train$PATTERN \
