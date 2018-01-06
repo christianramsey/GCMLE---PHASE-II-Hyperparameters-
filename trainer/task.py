@@ -2,6 +2,8 @@
 import tensorflow as tf
 import model
 import argparse
+import os
+import json
 
 from tensorflow.contrib.learn.python.learn import learn_runner
 
@@ -40,7 +42,12 @@ if __name__ == '__main__':
     output_dir = arguments.pop('output_dir')
 
     # job_dir = arguments['job-dir']
-
+    output_dir = os.path.join(
+        output_dir,
+        json.loads(
+            os.environ.get('TF_CONFIG', '{}')
+        ).get('task', {}).get('trial', '')
+    )
     # run
     tf.logging.set_verbosity(tf.logging.INFO)
     learn_runner.run(model.make_experiment_fn(**arguments), output_dir)
