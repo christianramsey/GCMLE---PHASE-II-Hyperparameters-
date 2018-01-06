@@ -33,6 +33,13 @@ if __name__ == '__main__':
       help='specify job dir for ml engine job',
       default='./junk'
     )
+    parser.add_argument(
+        '--batch_size',
+        help='Number of examples to compute gradient on',
+        type=int,
+        default=512
+    )
+
     # parse args
     args = parser.parse_args()
     arguments  = args.__dict__
