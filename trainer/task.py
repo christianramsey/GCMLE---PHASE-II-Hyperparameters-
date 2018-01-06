@@ -45,6 +45,19 @@ if __name__ == '__main__':
         type=int,
         default=10
     )
+    parser.add_argument(
+        '--hidden_units',
+        help='Hidden units',
+        type=list,
+        default=[64,12,4]
+    )
+    parser.add_argument(
+        '--nbuckets',
+        help='number of buckets',
+        type=int,
+        default=5
+    )
+
 
     # parse args
     args = parser.parse_args()

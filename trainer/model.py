@@ -206,12 +206,12 @@ def my_rmse(predictions, labels, **args):
                        labels, **args)
 
 
-def make_experiment_fn(traindata, evaldata, num_training_epochs, batch_size, hidden_units, **args):
+def make_experiment_fn(traindata, evaldata, num_training_epochs, nbuckets, batch_size, hidden_units, **args):
 
   def _experiment_fn(output_dir):
 
     return tflearn.Experiment(
-        wide_and_deep(output_dir, 5, hidden_units),
+        wide_and_deep(output_dir, nbuckets, hidden_units),
         train_input_fn=read_dataset(traindata,
                                     mode=tf.contrib.learn.ModeKeys.TRAIN),
                                     eval_input_fn=read_dataset(evaldata),
