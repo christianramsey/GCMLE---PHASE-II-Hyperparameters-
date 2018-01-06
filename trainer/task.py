@@ -39,6 +39,12 @@ if __name__ == '__main__':
         type=int,
         default=512
     )
+    parser.add_argument(
+        '--num_training_epochs',
+        help='Number of training epochs',
+        type=int,
+        default=10
+    )
 
     # parse args
     args = parser.parse_args()

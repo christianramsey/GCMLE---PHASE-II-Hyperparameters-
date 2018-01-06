@@ -17,4 +17,4 @@ trainingInput:
       scaleType: UNIT_LINEAR_SCALE
     - parameterName: hidden_units
       type: CATEGORICAL
-      categoricalValues: ["64,16", "64,16,4", "64,64,64,8", "256,64,16"]  
+      categoricalValues: ["64,16", "64,16,4", "64,64,64,8", "256,64,16"]

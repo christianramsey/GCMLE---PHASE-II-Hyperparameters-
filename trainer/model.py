@@ -98,12 +98,17 @@ def dnn_model(output_dir):
     estimator.params["head"]._thresholds = [0.7]
     return estimator
 
-def wide_and_deep(output_dir, buckets):
+def wide_and_deep(output_dir, buckets, hiddenunits):
     real, sparse = get_features()
 
     nbuckets = 4 # defaults
     if buckets != None:
         nbuckets = buckets
+
+    hidden_units = [64, 12, 4]
+    if hiddenunits != None:
+        hidden_units = hiddenunits
+
 
     # bucketise/discretise lat and lon to nbuckets
     latbuckets = np.linspace(20.0, 50.0, nbuckets).tolist()  # USA
@@ -140,7 +145,7 @@ def wide_and_deep(output_dir, buckets):
 
     estimator = tflearn.DNNLinearCombinedClassifier(model_dir=output_dir,
                                                     linear_feature_columns= sparse.values(),
-                                                    dnn_feature_columns=real.values(), dnn_hidden_units = [64, 12, 4])
+                                                    dnn_feature_columns=real.values(), dnn_hidden_units = hidden_units)
 
     estimator.params["head"]._thresholds = [0.7]
 
@@ -201,12 +206,12 @@ def my_rmse(predictions, labels, **args):
                        labels, **args)
 
 
-def make_experiment_fn(traindata, evaldata, num_training_epochs, batch_size, nbuckets, hidden_units, **args):
+def make_experiment_fn(traindata, evaldata, num_training_epochs, batch_size, hidden_units, **args):
 
   def _experiment_fn(output_dir):
 
     return tflearn.Experiment(
-        wide_and_deep(output_dir, 5),
+        wide_and_deep(output_dir, 5, hidden_units),
         train_input_fn=read_dataset(traindata,
                                     mode=tf.contrib.learn.ModeKeys.TRAIN),
                                     eval_input_fn=read_dataset(evaldata),
