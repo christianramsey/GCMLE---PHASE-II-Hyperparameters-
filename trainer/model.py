@@ -77,20 +77,15 @@ def create_embed(sparse_col):
     return tflayers.embedding_column(sparse_col, dimension=dim)
 
 
-def wide_and_deep(output_dir, buckets, hiddenunits, learningrate):
+def wide_and_deep(output_dir, nbuckets=5, hidden_units='64,16,4', learning_rate=0.01):
     real, sparse = get_features()
 
-    nbuckets = 5 # defaults
-    if buckets != None:
-        nbuckets = buckets
 
-    hidden_units = [64, 12, 4]
-    if hiddenunits != None:
-        hidden_units = hiddenunits
+    hidden_units = hidden_units.split(',')
+    hidden_units = list(map(int, hidden_units))
+    print(".........................", hidden_units)
 
-    learning_rate = 0.5
-    if learningrate != None:
-        learning_rate = learningrate
+
 
 
     # bucketise/discretise lat and lon to nbuckets
@@ -128,7 +123,7 @@ def wide_and_deep(output_dir, buckets, hiddenunits, learningrate):
 
     estimator = tflearn.DNNLinearCombinedClassifier(model_dir=output_dir,
                                                     linear_feature_columns= sparse.values(),
-                                                    dnn_feature_columns=real.values(), dnn_hidden_units = hidden_units, learning_rate=learning_rate)
+                                                    dnn_feature_columns=real.values(), dnn_hidden_units = hidden_units)
 
     estimator.params["head"]._thresholds = [0.7]
 
@@ -201,7 +196,7 @@ def make_experiment_fn(traindata, evaldata, num_training_epochs, batch_size, nbu
     return tflearn.Experiment(
         get_model(output_dir, nbuckets, hidden_units, learning_rate),
             train_input_fn=read_dataset(traindata, mode=tf.contrib.learn.ModeKeys.TRAIN, num_training_epochs=num_training_epochs, batch_size=batch_size),
-            eval_input_fn=read_dataset(evaldata), num_training_epochs=num_training_epochs,
+            eval_input_fn=read_dataset(evaldata),
                 eval_metrics={
                     'rmse': tflearn.MetricSpec(metric_fn=my_rmse,  prediction_key='probabilities'),
                     'training/hptuning/metric' : tflearn.MetricSpec(metric_fn=my_rmse, prediction_key='probabilities')

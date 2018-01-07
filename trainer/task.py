@@ -33,37 +33,41 @@ if __name__ == '__main__':
       help='specify job dir for ml engine job',
       default='./junk'
     )
-    parser.add_argument(
-        '--batch_size',
-        help='Number of examples to compute gradient on',
-        type=int,
-        default=512
-    )
-    parser.add_argument(
-        '--learning_rate',
-        help='let see',
-        type=float,
-        default=0.5
-    )
+
     parser.add_argument(
         '--num_training_epochs',
         help='Number of training epochs',
         type=int,
         default=10
     )
+
+    # for hyper-parameter tuning
     parser.add_argument(
-        '--hidden_units',
-        help='Hidden units',
-        type=list,
-        default=[64,12,4]
+        '--batch_size',
+        help='Number of examples to compute gradient on',
+        type=int,
+        default=100
     )
     parser.add_argument(
         '--nbuckets',
-        help='number of buckets',
+        help='Number of bins into which to discretize lats and lons',
         type=int,
         default=5
     )
 
+    parser.add_argument(
+        '--hidden_units',
+        help='hidden units',
+        required=True,
+        default='64,16,4'
+    )
+
+    parser.add_argument(
+        '--learning_rate',
+        help='Controls size of step in gradient descent.',
+        type=float,
+        default=0.0606
+    )
 
     # parse args
     args = parser.parse_args()
